@@ -5,16 +5,14 @@ const todoControl = document.querySelector('.todo-control'),
   todoList = document.querySelector('.todo-list'),
   todoCompleted = document.querySelector('.todo-completed');
 
-const todoData = [
-  {
-    value: 'Сварить кофе',
-    completed: false
-  },
-  {
-    value: 'Помыть посуду',
-    completed: true
-  }
-];
+// чтение списка todo из localStorage
+const todoData = (localStorage.getItem('todoData')) ? JSON.parse(localStorage.getItem('todoData')) : [];
+
+// сохранение списка todo в localStorage
+const saveTodoData = function (data) { 
+  localStorage.removeItem('todoData');
+  localStorage.setItem('todoData', JSON.stringify(data));
+};
 
 const render = function () {
   todoList.textContent = '';
@@ -33,10 +31,21 @@ const render = function () {
     } else {
       todoList.append(li);
     }
-    const btnTodoComplete = li.querySelector('.todo-complete');
 
+    // слушатель на кнопку подтверждения выполнения
+    const btnTodoComplete = li.querySelector('.todo-complete');
     btnTodoComplete.addEventListener('click', function () { 
       item.completed = !item.completed;
+      saveTodoData(todoData);
+      render();
+    });
+    // слушатель на кнопку удаления
+    const btnTodoRemove = li.querySelector('.todo-remove');
+    btnTodoRemove.addEventListener('click', function (e) { 
+      let itemText = e.target.closest('.todo-buttons').closest('li').textContent.trim();
+      let itemToRemove = todoData.findIndex(array => array.value === itemText);
+      todoData.splice(itemToRemove, 1);
+      saveTodoData(todoData);
       render();
     });
   })
@@ -44,12 +53,16 @@ const render = function () {
 
 todoControl.addEventListener('submit', function (event) {  
   event.preventDefault();
-  const newTodo = {
-    value: headerInput.value,
-    completed: false
-  };
-  todoData.push(newTodo);
-  render();
+  if (headerInput.value.trim().length > 0) {
+    const newTodo = {
+      value: headerInput.value,
+      completed: false
+    };
+    todoData.push(newTodo);
+    headerInput.value = '';
+    saveTodoData(todoData);
+    render();
+  }
 })
 
 render();
